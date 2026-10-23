@@ -75,7 +75,7 @@ struct ContentView: View {
             NavigationStack { PlatformBrowser(session: model.meituan, query: desiredFood) }
                 .tabItem { Label("美团", systemImage: "bag") }.tag(1)
             NavigationStack { PlatformBrowser(session: model.eleme, query: desiredFood) }
-                .tabItem { Label("饿了么", systemImage: "bag.fill") }.tag(2)
+                .tabItem { Label("淘宝闪购", systemImage: "bag.fill") }.tag(2)
             NavigationStack { ReportView(model: model) }
                 .tabItem { Label("验证记录", systemImage: "checklist") }.tag(3)
         }
@@ -220,6 +220,10 @@ private struct ValidationSection: View {
             Toggle("核对时餐品、规格、数量和地址相同", isOn: $session.notes.sameBasketAndAddress)
             Toggle("目标红包和会员券与原 App 一致", isOn: $session.notes.couponsMatchApp)
             Toggle("结算金额与原 App 一致", isOn: $session.notes.priceMatchesApp)
+            if session.platform == .eleme {
+                Text("核对标准：独立“淘宝闪购”App（原饿了么）的红包、会员券和应付金额。")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             Toggle("重开工具后仍保持登录", isOn: $session.notes.loginSurvivesRestart)
             NavigationLink("查看页面检测") { ProbeDetails(session: session) }
         }

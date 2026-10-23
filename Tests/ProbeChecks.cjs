@@ -109,6 +109,11 @@ check('report does not export credentials, raw page, or URL query', () => {
     'hasCouponText', 'checkoutLikely', 'addressRequired', 'hasOpenAppHint', 'prices', 'deliveryHints'].sort());
   assert.doesNotMatch(JSON.stringify(result), /secret|13800000000|668899|私人地址/);
 });
+check('recognizes the Taobao Shangou brand and legacy open-app prompts', () => {
+  for (const brand of ['淘宝闪购', '饿了么', '淘宝', '美团外卖']) {
+    assert.equal(run({ text: `打开${brand}App` }).hasOpenAppHint, true);
+  }
+});
 check('fills a unique product search and clicks only its exact search action', () => {
   const search = new Input({ placeholder: '搜索商家、商品' });
   const address = new Input({ type: 'search', placeholder: '搜索收货地址' });

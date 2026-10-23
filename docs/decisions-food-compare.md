@@ -7,7 +7,8 @@
 - 个人自用，iPhone 16 Pro，用户报告 iOS 27.0.1；地区暂按中国大陆。
 - 所有新增费用为 0，不购买 Mac、开发者会员、云构建额度或服务器。用户现有 Windows，没有 Mac。
 - 日常查询完全由 iPhone 独立运行。开发编译与签名续期单独处理，不能要求常开业务电脑。
-- 自动搜索美团与饿了么；截图或人工复制报价不能替代最终工具。
+- 自动搜索美团与淘宝闪购（原饿了么）；截图或人工复制报价不能替代最终工具。
+- 淘宝闪购的核对标准为独立 App 的红包、会员券与应付额。淘宝 App 内闪购频道的专属优惠不自动视为已验证。
 - 比较同店、同目标商品规格与数量；购物篮可以不同，预算内凑单，额外品种与数量另设条件。
 - 必须包含本人适用的红包、会员券，取得含配送费、包装费等的结算页应付金额。
 - 以应付金额与预计送达时间保留帕累托候选，仅限实际取得的有效报价范围。
@@ -48,9 +49,15 @@
 
 2026-10-23，[首次 Mac 构建](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638)成功，22 项 Swift 断言和 13 项页面检查通过，已生成未签名 IPA。尚未进行自签安装和真机验证。用户要求创建 PR、合并 PR 分别确认，当前没有创建 PR。
 
-后续真机进展：Sideloadly 遇到 Apple 登录鉴权错误；用户使用免费 iLoader 2.4.0 成功登录并安装原型。已从手机导出两平台报告，第二份报告能读取合计与送达线索。用户确认网页内个人优惠与对应官方 App 核对过。当前样例不是跨平台同店同餐，且饿了么尚未选择收货地址；饿了么重开需要重新登录。详细结论见 [真机验证记录](validation-2026-10-23.md)。
+后续真机进展：Sideloadly 遇到 Apple 登录鉴权错误；用户使用免费 iLoader 2.4.0 成功登录并安装原型。已从手机导出两平台报告，第二份报告能读取合计与送达线索。用户确认网页内个人优惠与对应官方 App 核对过。当前样例不是跨平台同店同餐，且淘宝闪购尚未选择收货地址；淘宝闪购重开需要重新登录。详细结论见 [真机验证记录](validation-2026-10-23.md)。
 
 0.1.1 已通过[第二次 iOS 构建](https://github.com/Unphony/mealcompare-ios/actions/runs/39923382578)：修正送达时间区间、提示缺少地址、导出时重新检测，增加仅含数量的登录保持诊断。22 项 Swift 断言与 18 项页面检查通过。此次不改变现有的持久网站存储标识，不把登录保持标为已修复。
+
+## 淘宝闪购品牌及重开报告
+
+用户明确要求按独立“淘宝闪购”App（原饿了么）继续。阿里巴巴[官方业务介绍](https://www.alibabagroup.com/en-US/about-alibaba-businesses-1894256634985709568)说明品牌更名，且官网链接仍为 ele.me。继续使用已在手机走通的 h5.ele.me 页面；品牌变更本身不证明不同入口的优惠完全一致。界面名称更新，内部 eleme 键、网站存储 UUID 和应用标识保持原值，以保留本地数据。
+
+0.1.1 两份新报告已验证完整送达区间和缺少地址标记。重开时持久 Cookie 数量仍为 26，会话型从 4 变为 0；数量不能证明 Cookie 身份、值或登录凭证相同，也不能据此锁定退出原因。暂不额外备份会话 Cookie，按已接受的手动登录方式继续验证自动查询；登录保持列为已知限制。
 
 ## 首要验证与后续
 
@@ -64,6 +71,6 @@
 
 - [Apple 应用隔离](https://support.apple.com/zh-cn/guide/security/sec15bfe098e/web)：普通应用不能读取另一应用的私有登录数据。
 - [WKWebView](https://developer.apple.com/documentation/webkit/wkwebview)、[WKWebsiteDataStore](https://developer.apple.com/documentation/webkit/wkwebsitedatastore)。
-- [美团网页](https://h5.waimai.meituan.com/waimai/mindex/home)、[饿了么网页](https://h5.ele.me/)：存在入口不证明完整结算可用。
+- [美团网页](https://h5.waimai.meituan.com/waimai/mindex/home)、[淘宝闪购原饿了么网页](https://h5.ele.me/)：存在入口不证明完整结算可用。
 - [美团联盟文档](https://page.meituan.net/html/1701831807616_1db0df/index.html)：商品券供给不等于个人全菜单结算报价。
 - [Scriptable](https://apps.apple.com/cn/app/scriptable/id1405459188)、[Userscripts](https://github.com/quoid/userscripts)：未采用的备选宿主。

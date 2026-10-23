@@ -2,9 +2,10 @@ import Foundation
 import Combine
 
 enum DeliveryPlatform: String, CaseIterable, Identifiable, Codable {
+    // Keep the legacy storage/report key so the brand update retains existing website data.
     case meituan, eleme
     var id: String { rawValue }
-    var name: String { self == .meituan ? "美团外卖" : "饿了么" }
+    var name: String { self == .meituan ? "美团外卖" : "淘宝闪购" }
     var homeURL: URL {
         URL(string: self == .meituan
             ? "https://h5.waimai.meituan.com/waimai/mindex/home"

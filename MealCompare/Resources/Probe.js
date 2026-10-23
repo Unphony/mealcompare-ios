@@ -67,7 +67,7 @@
     hasCouponText: /红包|会员券|优惠券/.test(text),
     checkoutLikely: /提交订单|确认订单|去支付/.test(text),
     addressRequired: /请选择(?:收货|配送)?地址|请先(?:选择|添加)(?:收货|配送)?地址|请添加(?:收货|配送)?地址/.test(text),
-    hasOpenAppHint: /打开\s*(?:美团|饿了么|淘宝)?\s*App|唤起\s*App/i.test(text),
+    hasOpenAppHint: /打开\s*(?:美团(?:外卖)?|饿了么|淘宝(?:闪购)?)?\s*App|唤起\s*App/i.test(text),
     prices,
     deliveryHints
   });
