@@ -64,8 +64,18 @@ jobs:
           swiftc MealCompare/ComparisonEngine.swift Tests/ComparisonEngineChecks.swift -o "$RUNNER_TEMP/mealcompare-engine-checks"
           "$RUNNER_TEMP/mealcompare-engine-checks"
 
+      - name: Check bounded basket planning
+        shell: bash
+        run: |
+          swiftc MealCompare/BasketPlanner.swift Tests/BasketPlannerChecks.swift -o "$RUNNER_TEMP/mealcompare-basket-checks"
+          "$RUNNER_TEMP/mealcompare-basket-checks"
+
       - name: Check page inspection and search behavior
-        run: node Tests/ProbeChecks.cjs
+        run: |
+          node Tests/ProbeChecks.cjs
+          node Tests/ShoppingChecks.cjs
+          node Tests/CouponChecks.cjs
+          node Tests/HistoryChecks.cjs
 
       - name: Build and package without signing
         shell: bash

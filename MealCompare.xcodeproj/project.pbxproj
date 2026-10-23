@@ -13,6 +13,12 @@
 		B00000000000000000000005 /* ComparisonEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000005 /* ComparisonEngine.swift */; };
 		B00000000000000000000006 /* Probe.js in Resources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000006 /* Probe.js */; };
 		B00000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F00000000000000000000007 /* Assets.xcassets */; };
+		B00000000000000000000008 /* BasketPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000000000000000000000A /* BasketPlanner.swift */; };
+		B00000000000000000000009 /* MealHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000000000000000000000B /* MealHistory.swift */; };
+		B0000000000000000000000A /* ShoppingAutomation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0000000000000000000000C /* ShoppingAutomation.swift */; };
+		B0000000000000000000000B /* Shopping.js in Resources */ = {isa = PBXBuildFile; fileRef = F0000000000000000000000D /* Shopping.js */; };
+		B0000000000000000000000C /* Coupon.js in Resources */ = {isa = PBXBuildFile; fileRef = F0000000000000000000000E /* Coupon.js */; };
+		B0000000000000000000000D /* History.js in Resources */ = {isa = PBXBuildFile; fileRef = F0000000000000000000000F /* History.js */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +31,12 @@
 		F00000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F00000000000000000000008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F00000000000000000000009 /* MealCompare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MealCompare.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F0000000000000000000000A /* BasketPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasketPlanner.swift; sourceTree = "<group>"; };
+		F0000000000000000000000B /* MealHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealHistory.swift; sourceTree = "<group>"; };
+		F0000000000000000000000C /* ShoppingAutomation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShoppingAutomation.swift; sourceTree = "<group>"; };
+		F0000000000000000000000D /* Shopping.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Shopping.js; sourceTree = "<group>"; };
+		F0000000000000000000000E /* Coupon.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Coupon.js; sourceTree = "<group>"; };
+		F0000000000000000000000F /* History.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = History.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +57,9 @@
 				F00000000000000000000003 /* PlatformSession.swift */,
 				F00000000000000000000004 /* ContentView.swift */,
 				F00000000000000000000005 /* ComparisonEngine.swift */,
+				F0000000000000000000000A /* BasketPlanner.swift */,
+				F0000000000000000000000B /* MealHistory.swift */,
+				F0000000000000000000000C /* ShoppingAutomation.swift */,
 				A00000000000000000000005 /* Resources */,
 				F00000000000000000000007 /* Assets.xcassets */,
 				F00000000000000000000008 /* Info.plist */,
@@ -53,7 +68,7 @@
 			sourceTree = "<group>";
 		};
 		A00000000000000000000004 /* Products */ = {isa = PBXGroup; children = (F00000000000000000000009 /* MealCompare.app */); name = Products; sourceTree = "<group>"; };
-		A00000000000000000000005 /* Resources */ = {isa = PBXGroup; children = (F00000000000000000000006 /* Probe.js */); path = Resources; sourceTree = "<group>"; };
+		A00000000000000000000005 /* Resources */ = {isa = PBXGroup; children = (F00000000000000000000006 /* Probe.js */, F0000000000000000000000D /* Shopping.js */, F0000000000000000000000E /* Coupon.js */, F0000000000000000000000F /* History.js */); path = Resources; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -88,7 +103,7 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A00000000000000000000009 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (B00000000000000000000006 /* Probe.js in Resources */, B00000000000000000000007 /* Assets.xcassets in Resources */); runOnlyForDeploymentPostprocessing = 0; };
+		A00000000000000000000009 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (B00000000000000000000006 /* Probe.js in Resources */, B00000000000000000000007 /* Assets.xcassets in Resources */, B0000000000000000000000B /* Shopping.js in Resources */, B0000000000000000000000C /* Coupon.js in Resources */, B0000000000000000000000D /* History.js in Resources */); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -101,6 +116,9 @@
 				B00000000000000000000003 /* PlatformSession.swift in Sources */,
 				B00000000000000000000004 /* ContentView.swift in Sources */,
 				B00000000000000000000005 /* ComparisonEngine.swift in Sources */,
+				B00000000000000000000008 /* BasketPlanner.swift in Sources */,
+				B00000000000000000000009 /* MealHistory.swift in Sources */,
+				B0000000000000000000000A /* ShoppingAutomation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,12 +164,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MealCompare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.local.mealcompare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -169,12 +187,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MealCompare/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = dev.local.mealcompare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

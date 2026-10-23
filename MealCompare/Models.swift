@@ -94,6 +94,7 @@ struct FeasibilityReport: Codable {
 
 @MainActor
 final class AppModel: ObservableObject {
+    let history = MealHistoryLibrary()
     let meituan = PlatformSession(platform: .meituan)
     let eleme = PlatformSession(platform: .eleme)
     var sessions: [PlatformSession] { [meituan, eleme] }

@@ -47,17 +47,17 @@
 
 用户已提供并授权公开仓库 `Unphony/mealcompare-ios`。源码上传到 `codex/native-feasibility`；本地原始快照保留为 `local-snapshot-444fc29` 标签，上传提交 `8330a862` 的文件树与原快照一致。
 
-2026-10-23，[首次 Mac 构建](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638)成功，22 项 Swift 断言和 13 项页面检查通过，已生成未签名 IPA。尚未进行自签安装和真机验证。用户要求创建 PR、合并 PR 分别确认，当前没有创建 PR。
+2026-10-23，[首次 Mac 构建](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638)成功，22 项 Swift 断言和 13 项页面检查通过，已生成未签名 IPA。用户要求创建 PR、合并 PR 分别确认，当前没有创建 PR。
 
-后续真机进展：Sideloadly 遇到 Apple 登录鉴权错误；用户使用免费 iLoader 2.4.0 成功登录并安装原型。已从手机导出两平台报告，第二份报告能读取合计与送达线索。用户确认网页内个人优惠与对应官方 App 核对过。当前样例不是跨平台同店同餐，且淘宝闪购尚未选择收货地址；淘宝闪购重开需要重新登录。详细结论见 [真机验证记录](validation-2026-10-23.md)。
+原型已完成基本自签安装与结算信息读取验证。免费 iLoader 2.4.0 可作为安装工具。完整比价仍需核对同店、同餐、同地址及目标优惠；公开文档不记录个人账号的登录状态或具体诊断数据。见[能力验证状态](validation-2026-10-23.md)。
 
 0.1.1 已通过[第二次 iOS 构建](https://github.com/Unphony/mealcompare-ios/actions/runs/39923382578)：修正送达时间区间、提示缺少地址、导出时重新检测，增加仅含数量的登录保持诊断。22 项 Swift 断言与 18 项页面检查通过。此次不改变现有的持久网站存储标识，不把登录保持标为已修复。
 
-## 淘宝闪购品牌及重开报告
+## 淘宝闪购品牌及会话设计
 
 用户明确要求按独立“淘宝闪购”App（原饿了么）继续。阿里巴巴[官方业务介绍](https://www.alibabagroup.com/en-US/about-alibaba-businesses-1894256634985709568)说明品牌更名，且官网链接仍为 ele.me。继续使用已在手机走通的 h5.ele.me 页面；品牌变更本身不证明不同入口的优惠完全一致。界面名称更新，内部 eleme 键、网站存储 UUID 和应用标识保持原值，以保留本地数据。
 
-0.1.1 两份新报告已验证完整送达区间和缺少地址标记。重开时持久 Cookie 数量仍为 26，会话型从 4 变为 0；数量不能证明 Cookie 身份、值或登录凭证相同，也不能据此锁定退出原因。暂不额外备份会话 Cookie，按已接受的手动登录方式继续验证自动查询；登录保持列为已知限制。
+采用稳定标识的 WebKit 持久网站存储；不额外备份会话 Cookie。数量统计仅作为本机诊断，不能证明登录状态或原因，具体计数不放入公开文档。按已接受的手动登录与验证码方式继续验证自动查询。
 
 ## 首要验证与后续
 
@@ -79,6 +79,8 @@
 公开脚本和模拟测试不等同于真机完成自动搜索；同店商品规格匹配、选券和组合购物篮仍未完成。
 
 ## 官方依据
+
+用户确认 0.1.2 后已推进[单店配餐验证与历史索引](automation-0.2.md)。阶段样例为汉堡王“双层厚鸡堡四件套”和牛约堡“经典招牌牛肉堡”，预算均为 30 元；将历史订单作为有限候选索引，金额仍每次到结算页重新取得。此阶段的局部操作链不代表完整自动跨平台比价已经验收。
 
 - [Apple 应用隔离](https://support.apple.com/zh-cn/guide/security/sec15bfe098e/web)：普通应用不能读取另一应用的私有登录数据。
 - [WKWebView](https://developer.apple.com/documentation/webkit/wkwebview)、[WKWebsiteDataStore](https://developer.apple.com/documentation/webkit/wkwebsitedatastore)。

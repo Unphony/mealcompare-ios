@@ -6,6 +6,7 @@ import Combine
 final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, WKUIDelegate {
     let platform: DeliveryPlatform
     let webView: WKWebView
+    lazy var shopping = ShoppingAutomation(webView: webView, platform: platform)
     @Published var status = "尚未打开平台"
     @Published var isLoading = false
     @Published var isInspecting = false
@@ -28,6 +29,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
     private var loadGeneration = UUID()
 
     var captureState: String {
+        if shopping.isRunning { return "shopping" }
         if isSearching { return "searching" }
         if webView.url == nil { return "not-open" }
         if isLoading || webView.isLoading { return "loading" }
@@ -88,6 +90,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
     }
 
     private func cancelSearch() {
+        shopping.cancel()
         activeSearchID = UUID()
         searchTask?.cancel()
         searchTask = nil
@@ -122,6 +125,16 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
 
     func openIfNeeded() {
         if webView.url == nil && !isLoading && !webView.isLoading { openHome() }
+    }
+
+    func startShopping(productName: String, quantity: Int, preferredOptions: [String],
+                       budgetCents: Int, maxExtraQuantity: Int, allowedExtraNames: [String]) {
+        cancelSearch()
+        probe = nil
+        inspectedAt = nil
+        shopping.start(productName: productName, quantity: quantity, preferredOptions: preferredOptions,
+                       budgetCents: budgetCents, maxExtraQuantity: maxExtraQuantity,
+                       allowedExtraNames: allowedExtraNames)
     }
 
     func search(_ query: String) {
@@ -188,7 +201,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
 
     @discardableResult
     func inspectCurrentPage() async -> Bool {
-        guard !isInspecting, !isSearching, !isLoading, !webView.isLoading, webView.url != nil else { return false }
+        guard !isInspecting, !isSearching, !shopping.isRunning, !isLoading, !webView.isLoading, webView.url != nil else { return false }
         isInspecting = true
         probe = nil
         inspectedAt = nil
@@ -252,7 +265,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
                 pendingSearch = nil
                 pendingSearchNavigation = nil
                 performSearch(pending.query, id: pending.id)
-            } else if !isSearching {
+            } else if !isSearching && !shopping.isRunning {
                 inspect()
             }
         }
