@@ -16,8 +16,11 @@
 | 0.1.0 | 8330a862 | [成功](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638) |
 | 0.1.1 | a70b56f0 | [成功](https://github.com/Unphony/mealcompare-ios/actions/runs/39923382578) |
 | 0.1.2 | c25c0057 | [成功](https://github.com/Unphony/mealcompare-ios/actions/runs/39943134897) |
+| 0.2.0 | a7fb6547 | [成功](https://github.com/Unphony/mealcompare-ios/actions/runs/39957111858) |
 
 0.1.2 安装包版本为 0.1.2、构建号 3；已核验 ZIP、ARM64 架构及页面脚本一致性。构建成功只证明代码可编译，不代表所有真实门店和优惠组合均可自动操作。
+
+0.2.0 构建号 4，原有比较检查、24 项凑单检查和 73 项页面检查通过。已核验 ZIP、ARM64 架构及 Probe、Shopping、Coupon、History 四份脚本与源码一致。IPA SHA256 为 `8630c75ba21993748ab8d5fd3af15c746b9c9e61fcd410dda4ce53187481edfb`。新操作链待按设备步骤真机验证。
 
 ## 下一阶段
 
