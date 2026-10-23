@@ -125,11 +125,11 @@ private struct PlatformBrowser: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(session.status).font(.caption).foregroundStyle(.secondary).lineLimit(3)
                 HStack {
-                    Button { session.webView.goBack() } label: { Image(systemName: "chevron.left") }
+                    Button { session.goBack() } label: { Image(systemName: "chevron.left") }
                         .accessibilityLabel("返回上一页")
                     Button { session.openHome() } label: { Image(systemName: "house") }
                         .accessibilityLabel("返回平台首页")
-                    Button { session.webView.reload() } label: { Image(systemName: "arrow.clockwise") }
+                    Button { session.reload() } label: { Image(systemName: "arrow.clockwise") }
                         .accessibilityLabel("重新载入网页")
                     Spacer()
                     Button("试查") { session.search(query) }

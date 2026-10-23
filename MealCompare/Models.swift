@@ -11,6 +11,12 @@ enum DeliveryPlatform: String, CaseIterable, Identifiable, Codable {
             ? "https://h5.waimai.meituan.com/waimai/mindex/home"
             : "https://h5.ele.me/")!
     }
+    // Routes confirmed from the platforms' public web applications, not private APIs.
+    var searchURL: URL {
+        URL(string: self == .meituan
+            ? "https://h5.waimai.meituan.com/waimai/mindex/search"
+            : "https://h5.ele.me/search/#/")!
+    }
     // Stable identities preserve each platform's own WebKit profile across launches.
     var profileID: UUID {
         UUID(uuidString: self == .meituan
@@ -45,6 +51,11 @@ struct SearchOutcome: Decodable {
     let message: String
 }
 
+struct SearchAttempt: Codable {
+    let status: String
+    let updatedAt: Date
+}
+
 struct ValidationNotes: Codable {
     var canLogIn = false
     var canReachCheckout = false
@@ -62,6 +73,7 @@ struct PlatformReport: Codable {
     let captureState: String
     let startupCookies: CookieSummary?
     let currentCookies: CookieSummary?
+    let searchAttempt: SearchAttempt?
 }
 
 // Counts only: neither cookie names nor values are included in reports or preferences.
@@ -104,7 +116,8 @@ final class AppModel: ObservableObject {
                 PlatformReport(platform: $0.platform, probe: $0.probe,
                                inspectedAt: $0.inspectedAt, notes: $0.notes,
                                captureState: $0.captureState,
-                               startupCookies: $0.startupCookies, currentCookies: $0.currentCookies)
+                               startupCookies: $0.startupCookies, currentCookies: $0.currentCookies,
+                               searchAttempt: $0.searchAttempt)
             })
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

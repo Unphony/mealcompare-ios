@@ -9,7 +9,7 @@ let checks = 0;
 class Element {
   constructor(options = {}) {
     Object.assign(this, { type: 'text', placeholder: '', innerText: '', disabled: false,
-      readOnly: false, hidden: false, attributes: {}, events: [], clicks: 0 }, options);
+      readOnly: false, hidden: false, isConnected: true, attributes: {}, events: [], clicks: 0 }, options);
   }
   getBoundingClientRect() { return { width: this.hidden ? 0 : 100, height: 40 }; }
   getAttribute(name) { return this.attributes[name] ?? null; }
@@ -21,25 +21,30 @@ class Input extends Element {
   set value(value) { this.currentValue = value; }
 }
 
-function run({ text = '', inputs = [], buttons = [], action = 'inspect', query = '' } = {}) {
-  const timers = [];
+function run({ text = '', inputs = [], buttons = [], forms = [], action = 'inspect', query = '',
+  url = 'https://fixture.example/?token=secret' } = {}) {
   const context = {
     document: {
       body: { innerText: text },
-      querySelectorAll: selector => selector === 'input' ? inputs : buttons
+      querySelectorAll: selector => selector === 'input' ? inputs
+        : selector === '#sqt-openh5-searchSearchBar form' ? forms : buttons
     },
     window: {
       getComputedStyle: element => ({ visibility: element.hidden ? 'hidden' : 'visible', display: 'block' }),
-      setTimeout: callback => timers.push(callback)
+      setTimeout: () => { throw new Error('Search must not leave a page click timer'); }
     },
-    location: { origin: 'https://fixture.example', href: 'https://fixture.example/?token=secret' },
+    location: new URL(url),
     HTMLInputElement: Input,
     Event: class { constructor(type) { this.type = type; } }
   };
   const result = JSON.parse(vm.runInNewContext(script.replace('__MEAL_COMPARE_REQUEST__',
     JSON.stringify({ action, query })), context));
-  timers.forEach(callback => callback());
   return result;
+}
+
+function searchAndSubmit(options) {
+  const prepared = run({ ...options, action: 'search' });
+  return prepared.status === 'prepared' ? run({ ...options, action: 'submit-search' }) : prepared;
 }
 
 function check(name, test) {
@@ -119,7 +124,7 @@ check('fills a unique product search and clicks only its exact search action', (
   const address = new Input({ type: 'search', placeholder: '搜索收货地址' });
   const submitSearch = new Element({ innerText: '搜索' });
   const order = new Element({ innerText: '提交订单' });
-  const result = run({ action: 'search', query: '  鸡腿堡  ', inputs: [search, address], buttons: [submitSearch, order] });
+  const result = searchAndSubmit({ query: '  鸡腿堡  ', inputs: [search, address], buttons: [submitSearch, order] });
   assert.equal(result.status, 'submitted');
   assert.equal(search.value, '鸡腿堡');
   assert.deepEqual(search.events, ['input', 'change']);
@@ -130,12 +135,12 @@ check('fills a unique product search and clicks only its exact search action', (
 check('does not modify login or address-only pages', () => {
   const inputs = [new Input({ placeholder: '搜索地址', type: 'search' }),
     new Input({ placeholder: '手机号' }), new Input({ placeholder: '验证码' })];
-  assert.equal(run({ action: 'search', query: '饭', inputs }).status, 'unsupported');
+  assert.equal(run({ action: 'search', query: '饭', inputs }).status, 'needs-login');
   inputs.forEach(input => assert.equal(input.value, ''));
 });
 check('ambiguous product fields require platform adapter knowledge', () => {
   const inputs = [new Input({ type: 'search' }), new Input({ placeholder: '搜索' })];
-  assert.equal(run({ action: 'search', query: '饭', inputs }).status, 'unsupported');
+  assert.equal(run({ action: 'search', query: '饭', inputs }).status, 'ambiguous');
   inputs.forEach(input => assert.equal(input.value, ''));
 });
 check('hidden and disabled search controls are ignored', () => {
@@ -163,5 +168,59 @@ check('query characters remain text and never execute as code', () => {
   const input = new Input({ type: 'search' });
   assert.equal(run({ action: 'search', query, inputs: [input] }).status, 'filled');
   assert.equal(input.value, query);
+});
+check('waits for a client-rendered product search field without changing other controls', () => {
+  assert.equal(run({ action: 'search', query: '饭' }).status, 'waiting');
+});
+check('pauses search when a visible login form is present', () => {
+  const search = new Input({ type: 'search' });
+  const button = new Element({ innerText: '搜索' });
+  const result = run({ action: 'search', query: '饭', inputs: [search, new Input({ type: 'password' })], buttons: [button] });
+  assert.equal(result.status, 'needs-login');
+  assert.equal(search.value, '');
+  assert.equal(button.clicks, 0);
+});
+check('submits only the official Meituan search form containing the product field', () => {
+  const input = new Input({ placeholder: '请输入商家或商品名称' });
+  const form = new Element({ submissions: 0,
+    contains: element => element === input,
+    requestSubmit() { this.submissions++; } });
+  const order = new Element({ innerText: '提交订单' });
+  const result = searchAndSubmit({ query: '鸡腿堡', inputs: [input], forms: [form], buttons: [order],
+    url: 'https://h5.waimai.meituan.com/waimai/mindex/search' });
+  assert.equal(result.status, 'submitted');
+  assert.equal(input.value, '鸡腿堡');
+  assert.equal(form.submissions, 1);
+  assert.equal(order.clicks, 0);
+});
+check('does not submit the special form on another domain, checkout, or ambiguous forms', () => {
+  for (const url of ['https://fixture.example/waimai/mindex/search',
+    'https://h5.waimai.meituan.com/waimai/mindex/checkout']) {
+    const input = new Input({ type: 'search' });
+    const form = new Element({ contains: () => true, requestSubmit() { throw new Error('unexpected submit'); } });
+    assert.equal(run({ action: 'search', query: '饭', inputs: [input], forms: [form], url }).status, 'filled');
+  }
+  const input = new Input({ type: 'search' });
+  const forms = [1, 2].map(() => new Element({ contains: () => true, requestSubmit() { throw new Error('unexpected submit'); } }));
+  assert.equal(run({ action: 'search', query: '饭', inputs: [input], forms,
+    url: 'https://h5.waimai.meituan.com/waimai/mindex/search' }).status, 'filled');
+});
+check('preparation schedules no click, and submission rechecks the current input', () => {
+  const input = new Input({ type: 'search' });
+  const button = new Element({ innerText: '搜索' });
+  const options = { query: '饭', inputs: [input], buttons: [button] };
+  assert.equal(run({ ...options, action: 'search' }).status, 'prepared');
+  assert.equal(button.clicks, 0);
+  input.value = '面';
+  assert.equal(run({ ...options, action: 'submit-search' }).status, 'changed');
+  assert.equal(button.clicks, 0);
+});
+check('submission stops when login appears after filling the search', () => {
+  const input = new Input({ type: 'search' });
+  const button = new Element({ innerText: '搜索' });
+  assert.equal(run({ action: 'search', query: '饭', inputs: [input], buttons: [button] }).status, 'prepared');
+  assert.equal(run({ action: 'submit-search', query: '饭',
+    inputs: [input, new Input({ placeholder: '验证码' })], buttons: [button] }).status, 'needs-login');
+  assert.equal(button.clicks, 0);
 });
 process.stdout.write(`${checks} page-probe fixture checks passed. Live platform validation is still required.\n`);

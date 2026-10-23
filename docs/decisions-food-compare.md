@@ -67,6 +67,17 @@
 4. 数据来源通过后，开发完整自动化适配并接入筛选核心。
 5. 如果网页缺少必要优惠或依赖官方 App，记录失败点，重新评估；换宿主不保证补齐数据能力。
 
+## 0.1.2 自动进入搜索页
+
+根据公开官方前端脚本确认了两条搜索入口，导航后等待可见商品搜索框，填写并提交官方搜索表单。不研究或调用私有搜索接口。
+
+- 美团：https://h5.waimai.meituan.com/waimai/mindex/search。[主脚本](https://s3.meituan.net/static-prod01/ws-assets/com.sankuai.wmcapp.openh5.static/M1ex5S6hJrPw3cGoTvmG5/js/index.0f6b961e.js)声明 basename `/waimai` 和 `/:channel/search` 路由；[搜索脚本](https://s3.meituan.net/static-prod01/ws-assets/com.sankuai.wmcapp.openh5.static/M1ex5S6hJrPw3cGoTvmG5/js/search.97adffad.js)使用 `#sqt-openh5-searchSearchBar` 内的表单，“搜索”本身为普通 div。只在精确域名和该路径提交此容器的唯一表单。
+- 淘宝闪购：https://h5.ele.me/search/#/。[首页脚本](https://shadow.elemecdn.com/faas/h5-msite/msite/msite.96f6961.js)的 `goSearch` 打开 `/search/#/`；[搜索脚本](https://shadow.elemecdn.com/faas/h5/search/search.9d45ea8.js)含原生搜索输入框和“搜索”提交按钮。
+
+填写和提交分两步，等待由可取消的本机任务控制，页面中不遗留点击定时器。返回、首页、刷新或新搜索会取消旧任务；待处理搜索只在对应导航完成后执行。登录/验证码由用户处理，再点击“试查”继续。报告仅新增搜索尝试状态与时间，不包含查询词或网页内容。
+
+公开脚本和模拟测试不等同于真机完成自动搜索；同店商品规格匹配、选券和组合购物篮仍未完成。
+
 ## 官方依据
 
 - [Apple 应用隔离](https://support.apple.com/zh-cn/guide/security/sec15bfe098e/web)：普通应用不能读取另一应用的私有登录数据。

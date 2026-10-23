@@ -14,16 +14,21 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
     @Published var inspectedAt: Date?
     @Published private(set) var startupCookies: CookieSummary?
     @Published private(set) var currentCookies: CookieSummary?
+    @Published private(set) var searchAttempt: SearchAttempt?
     @Published var notes: ValidationNotes {
         didSet { saveNotes() }
     }
-    private var pendingSearch: String?
+    private var pendingSearch: (query: String, id: UUID)?
+    private var pendingSearchNavigation: WKNavigation?
+    private var searchTask: Task<Void, Never>?
+    private var activeSearchID = UUID()
     private var currentNavigationID = UUID()
     private var probeScript: String?
     private var startupCheck: Task<Void, Never>?
     private var loadGeneration = UUID()
 
     var captureState: String {
+        if isSearching { return "searching" }
         if webView.url == nil { return "not-open" }
         if isLoading || webView.isLoading { return "loading" }
         if isInspecting { return "inspecting" }
@@ -63,20 +68,45 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
     }
 
     func openHome() {
-        pendingSearch = nil
+        cancelSearch()
         status = "正在打开官方网页"
         isLoading = true
-        loadHomeAfterStartupCheck()
+        loadAfterStartupCheck(platform.homeURL)
     }
 
-    private func loadHomeAfterStartupCheck() {
+    private func loadAfterStartupCheck(_ url: URL, searchID: UUID? = nil) {
         let generation = UUID()
         loadGeneration = generation
         Task {
             await startupCheck?.value
             guard generation == loadGeneration else { return }
-            webView.load(URLRequest(url: platform.homeURL))
+            let navigation = webView.load(URLRequest(url: url))
+            if let searchID, searchID == activeSearchID {
+                pendingSearchNavigation = navigation
+            }
         }
+    }
+
+    private func cancelSearch() {
+        activeSearchID = UUID()
+        searchTask?.cancel()
+        searchTask = nil
+        pendingSearch = nil
+        pendingSearchNavigation = nil
+        loadGeneration = UUID()
+        isSearching = false
+    }
+
+    func goBack() {
+        cancelSearch()
+        status = "正在返回上一页"
+        webView.goBack()
+    }
+
+    func reload() {
+        cancelSearch()
+        status = "正在重新载入网页"
+        webView.reload()
     }
 
     private func cookieSummary() async -> CookieSummary {
@@ -100,28 +130,53 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
             status = "请填写 1–100 字的商品名称"
             return
         }
-        guard !isSearching else { return }
+        cancelSearch()
+        currentNavigationID = UUID()
         probe = nil
         inspectedAt = nil
-        if webView.url == nil || isLoading || webView.isLoading {
-            pendingSearch = query
-            status = "网页加载后尝试搜索"
-            if webView.url == nil && !isLoading && !webView.isLoading {
-                isLoading = true
-                loadHomeAfterStartupCheck()
-            }
-            return
-        }
+        pendingSearch = (query: query, id: activeSearchID)
+        searchAttempt = SearchAttempt(status: "opening", updatedAt: Date())
+        status = "正在进入商品搜索页"
+        isLoading = true
         isSearching = true
+        loadAfterStartupCheck(platform.searchURL, searchID: activeSearchID)
+    }
+
+    private func performSearch(_ query: String, id: UUID) {
         let navigationID = currentNavigationID
-        Task {
-            defer { isSearching = false }
+        searchTask = Task {
+            defer {
+                if id == activeSearchID { isSearching = false }
+            }
             do {
-                let outcome: SearchOutcome = try await runScript(action: "search", query: query)
-                guard navigationID == currentNavigationID else { return }
-                status = outcome.message
+                // A finished navigation may still be rendering its search form.
+                for attempt in 0..<12 {
+                    guard !Task.isCancelled, id == activeSearchID,
+                          navigationID == currentNavigationID else { return }
+                    var outcome: SearchOutcome = try await runScript(action: "search", query: query)
+                    guard !Task.isCancelled, id == activeSearchID,
+                          navigationID == currentNavigationID else { return }
+                    if outcome.status == "waiting", attempt < 11 {
+                        try await Task.sleep(nanoseconds: 350_000_000)
+                        continue
+                    }
+                    if outcome.status == "prepared" {
+                        // The cancellable native task owns this wait; no click timer survives Back/Home.
+                        try await Task.sleep(nanoseconds: 150_000_000)
+                        guard !Task.isCancelled, id == activeSearchID,
+                              navigationID == currentNavigationID else { return }
+                        outcome = try await runScript(action: "submit-search", query: query)
+                        guard !Task.isCancelled, id == activeSearchID else { return }
+                    }
+                    searchAttempt = SearchAttempt(status: outcome.status, updatedAt: Date())
+                    if navigationID == currentNavigationID { status = outcome.message }
+                    return
+                }
+            } catch is CancellationError {
+                return
             } catch {
-                guard navigationID == currentNavigationID else { return }
+                guard id == activeSearchID, navigationID == currentNavigationID else { return }
+                searchAttempt = SearchAttempt(status: "failed", updatedAt: Date())
                 status = "尚未完成自动搜索，请待网页稳定后重试。\(error.localizedDescription)"
             }
         }
@@ -133,7 +188,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
 
     @discardableResult
     func inspectCurrentPage() async -> Bool {
-        guard !isInspecting, !isLoading, !webView.isLoading, webView.url != nil else { return false }
+        guard !isInspecting, !isSearching, !isLoading, !webView.isLoading, webView.url != nil else { return false }
         isInspecting = true
         probe = nil
         inspectedAt = nil
@@ -177,6 +232,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        if let expected = pendingSearchNavigation, navigation !== expected { cancelSearch() }
         currentNavigationID = UUID()
         isLoading = true
         probe = nil
@@ -190,10 +246,13 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
             // Give client-rendered pages a chance to insert their first controls.
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard navigationID == currentNavigationID else { return }
-            if let query = pendingSearch {
+            if let pending = pendingSearch {
+                guard pending.id == activeSearchID, let expected = pendingSearchNavigation,
+                      navigation === expected else { return }
                 pendingSearch = nil
-                search(query)
-            } else {
+                pendingSearchNavigation = nil
+                performSearch(pending.query, id: pending.id)
+            } else if !isSearching {
                 inspect()
             }
         }
@@ -211,13 +270,14 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
         // A replaced navigation must not erase the next navigation's queued query.
         guard (error as NSError).code != NSURLErrorCancelled else { return }
         isLoading = false
-        pendingSearch = nil
+        cancelSearch()
+        searchAttempt = SearchAttempt(status: "failed", updatedAt: Date())
         status = "网页未能加载：\(error.localizedDescription)"
     }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         currentNavigationID = UUID()
-        pendingSearch = nil
+        cancelSearch()
         isLoading = false
         probe = nil
         inspectedAt = nil
@@ -243,6 +303,7 @@ final class PlatformSession: NSObject, ObservableObject, WKNavigationDelegate, W
         if navigationAction.targetFrame == nil,
            let scheme = navigationAction.request.url?.scheme,
            ["https", "http"].contains(scheme) {
+            cancelSearch()
             webView.load(navigationAction.request)
         }
         return nil
