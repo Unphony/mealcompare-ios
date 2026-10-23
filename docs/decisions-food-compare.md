@@ -1,6 +1,6 @@
 # 饭价：需求与架构决定
 
-更新：2026-10-22（Asia/Shanghai）。
+更新：2026-10-23（Asia/Shanghai）。
 
 ## 已确定
 
@@ -44,7 +44,9 @@
 
 [Sideloadly 官方说明](https://sideloadly.io/)提供 Windows 免费账号自签路线。免费签名期限为 7 天，续签需要电脑及设备连接条件；日常查询无需电脑。官网列出 iOS 27+，但这台设备和用户所报 iOS 27.0.1 未实际验证。
 
-本机没有 Xcode，尚未通过 iOS 编译、尚未生成 IPA。还需用户提供授权上传的 GitHub 仓库。
+用户已提供并授权公开仓库 `Unphony/mealcompare-ios`。源码上传到 `codex/native-feasibility`；本地原始快照保留为 `local-snapshot-444fc29` 标签，上传提交 `8330a862` 的文件树与原快照一致。
+
+2026-10-23，[首次 Mac 构建](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638)成功，22 项 Swift 断言和 13 项页面检查通过，已生成未签名 IPA。尚未进行自签安装和真机验证。用户要求创建 PR、合并 PR 分别确认，当前没有创建 PR。
 
 ## 首要验证与后续
 

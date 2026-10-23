@@ -1,6 +1,8 @@
 # 饭价 · iPhone 本地比价验证原型
 
-**当前为源码原型，尚未生成 IPA、未通过 iOS 编译与真机验证，也未实现完整自动比价。**
+**验证原型已通过 iOS 编译并生成未签名 IPA；尚未通过真机验证，也未实现完整自动比价。**
+
+2026-10-23：[首次构建成功](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638)，对应代码提交 `8330a862`。22 项 Swift 断言和 13 项页面检查通过。下载该运行的 `MealCompare-unsigned` 产物后，按下文在 Windows 自签安装。
 
 目标设备 iPhone 16 Pro，用户报告 iOS 27.0.1。日常完全由手机执行，所有新增费用为 0。工程最低 iOS 17，无第三方运行库或业务服务器。
 
@@ -13,8 +15,8 @@
 ## 免费生成安装包
 
 1. 准备 GitHub 仓库。公开源码须经你同意；公开的是工程代码，不包含账号数据。公开仓库的标准托管构建机器免费，私有仓库需核对包含额度并设置 **0 付费支出限制**。[官方计费说明](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
-2. 将完整源码放入默认分支，保留隐藏的 .github 文件夹。
-3. 打开 **Actions → Build unsigned iPhone app → Run workflow**。
+2. 当前源码位于 `codex/native-feasibility`，推送该分支自动触发构建；创建和合并 PR 都需用户分别确认。
+3. 查看 **Actions → Build unsigned iPhone app**。工作流合入默认分支后，也可使用 **Run workflow** 手动运行。
 4. 公开仓库保留 private_macos_budget_confirmed 为 false；私有仓库只有核对额度和支出限制后才勾选。额度耗尽即停止，不购买额外额度。
 5. 流程使用标准 macos-26，检查脚本、执行 Swift 筛选测试并编译 App，不需要 Apple 凭证。
 6. 全部成功后下载产物 **MealCompare-unsigned**，解压得到 **MealCompare-unsigned.ipa**。产物只保留一天；注意账号总存储用量。
@@ -39,7 +41,7 @@
 
 页面逻辑检查：运行 node Tests/ProbeChecks.cjs。目前 **13 项模拟页面检查通过**，不代表线上平台可用。
 
-Swift 比较核心有 22 项断言；本机无 Swift/Xcode，尚未运行，云构建会执行。Mac 上也可执行：
+Swift 比较核心的 22 项断言已在 Mac 云构建中运行通过。本机 Windows 没有 Xcode；Mac 上也可执行：
 
 ```sh
 swiftc MealCompare/ComparisonEngine.swift Tests/ComparisonEngineChecks.swift -o /tmp/mealcompare-checks
@@ -51,7 +53,7 @@ bash scripts/build-ios.sh
 
 - MealCompare/：界面、网页会话、比较核心。
 - MealCompare/Resources/Probe.js：页面检测与有限搜索尝试。
-- .github/workflows/build-ios.yml：手动构建流程。
+- .github/workflows/build-ios.yml：开发分支推送及手动构建流程。
 - docs/decisions-food-compare.md：需求、选型与未验证事项。
 
 报告只包含来源域名、检测时间、候选信息和核对记录，不包含凭证、地址或完整网页。页面变化后需重新检测。
