@@ -1,0 +1,12 @@
+* text=auto eol=lf
+*.swift text eol=lf
+*.js text eol=lf
+*.cjs text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.plist text eol=lf
+*.pbxproj text eol=lf
+*.xcscheme text eol=lf
+*.json text eol=lf
+*.png binary

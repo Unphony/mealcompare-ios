@@ -1,0 +1,81 @@
+name: Build unsigned iPhone app
+
+on:
+  push:
+    branches:
+      - codex/native-feasibility
+  workflow_dispatch:
+    inputs:
+      private_macos_budget_confirmed:
+        description: 'Private repo only: I checked included Actions minutes and set a $0 spending cap. macOS may otherwise incur charges.'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unsigned-ios-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  visibility-check:
+    name: Check repository visibility before allocating macOS
+    runs-on: ubuntu-slim
+    timeout-minutes: 2
+    outputs:
+      allow_macos: ${{ steps.visibility.outputs.allow_macos }}
+    steps:
+      - name: Require public repository or explicit private-budget confirmation
+        id: visibility
+        env:
+          REPOSITORY_VISIBILITY: ${{ github.event.repository.visibility }}
+          PRIVATE_BUDGET_CONFIRMED: ${{ inputs.private_macos_budget_confirmed }}
+        shell: bash
+        run: |
+          if [[ "$REPOSITORY_VISIBILITY" == 'public' ]]; then
+            echo 'allow_macos=true' >> "$GITHUB_OUTPUT"
+            echo 'Public repository: standard macOS runners are free.'
+          elif [[ "$REPOSITORY_VISIBILITY" == 'private' && "$PRIVATE_BUDGET_CONFIRMED" == 'true' ]]; then
+            echo 'allow_macos=true' >> "$GITHUB_OUTPUT"
+            echo 'Private repository: the operator confirmed included minutes and a $0 spending cap.'
+          else
+            echo 'allow_macos=false' >> "$GITHUB_OUTPUT"
+            echo '::error::macOS build blocked. A private repository requires explicit confirmation that included minutes and a $0 spending cap have been checked. Unknown visibility is also blocked.'
+            exit 1
+          fi
+
+  build:
+    name: Build unsigned IPA (no certificates)
+    needs: visibility-check
+    if: ${{ needs.visibility-check.outputs.allow_macos == 'true' }}
+    runs-on: macos-26
+    timeout-minutes: 12
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check comparison rules
+        shell: bash
+        run: |
+          swiftc MealCompare/ComparisonEngine.swift Tests/ComparisonEngineChecks.swift -o "$RUNNER_TEMP/mealcompare-engine-checks"
+          "$RUNNER_TEMP/mealcompare-engine-checks"
+
+      - name: Check page inspection and search behavior
+        run: node Tests/ProbeChecks.cjs
+
+      - name: Build and package without signing
+        shell: bash
+        run: bash scripts/build-ios.sh
+
+      - name: Keep unsigned IPA for one day
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: MealCompare-unsigned
+          path: build/ios/MealCompare-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
