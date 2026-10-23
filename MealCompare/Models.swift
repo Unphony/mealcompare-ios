@@ -33,6 +33,7 @@ struct PageProbe: Codable {
     let hasLoginInput: Bool
     let hasCouponText: Bool
     let checkoutLikely: Bool
+    let addressRequired: Bool?
     let hasOpenAppHint: Bool
     let prices: [PriceCandidate]
     let deliveryHints: [String]
@@ -57,6 +58,17 @@ struct PlatformReport: Codable {
     let probe: PageProbe?
     let inspectedAt: Date?
     let notes: ValidationNotes
+    let captureState: String
+    let startupCookies: CookieSummary?
+    let currentCookies: CookieSummary?
+}
+
+// Counts only: neither cookie names nor values are included in reports or preferences.
+struct CookieSummary: Codable {
+    let measuredAt: Date
+    let total: Int
+    let sessionOnly: Int
+    let persistent: Int
 }
 
 struct FeasibilityReport: Codable {
@@ -77,13 +89,21 @@ final class AppModel: ObservableObject {
         for session in sessions { session.search(query) }
     }
 
-    func reportURL() throws -> URL {
+    func reportURL() async throws -> URL {
+        // Refresh the visible page state instead of silently exporting an earlier page snapshot.
+        for session in sessions {
+            _ = await session.inspectCurrentPage()
+        }
         let report = FeasibilityReport(
-            schemaVersion: 1, appVersion: "0.1.0", generatedAt: Date(),
+            schemaVersion: 2,
+            appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown",
+            generatedAt: Date(),
             stage: "feasibility-prototype-not-verified-comparison",
             platforms: sessions.map {
                 PlatformReport(platform: $0.platform, probe: $0.probe,
-                               inspectedAt: $0.inspectedAt, notes: $0.notes)
+                               inspectedAt: $0.inspectedAt, notes: $0.notes,
+                               captureState: $0.captureState,
+                               startupCookies: $0.startupCookies, currentCookies: $0.currentCookies)
             })
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

@@ -51,20 +51,22 @@
     if (prices.length >= 8) break;
   }
   const deliveryHints = [];
-  const etaPattern = /(?:预计\s*(?:送达\s*)?\d{1,3}\s*(?:[-~～至]\s*\d{1,3}\s*)?分钟(?:内)?(?:送达)?|(?:预计\s*)?\d{1,2}:\d{2}\s*送达)/g;
+  const etaPattern = /(?:预计\s*(?:送达\s*)?\d{1,3}\s*(?:[-~～至]\s*\d{1,3}\s*)?分钟(?:内)?(?:送达)?|(?:(?:预计|大约)\s*)?(?:[01]?\d|2[0-3]):[0-5]\d\s*(?:[-~～至—–]\s*(?:[01]?\d|2[0-3]):[0-5]\d\s*)?送达)/g;
   for (const match of text.matchAll(etaPattern)) {
+    if (match.index > 0 && /[\d:]/.test(text[match.index - 1])) continue;
     const hint = match[0].replace(/\s+/g, " ").trim();
     if (!deliveryHints.includes(hint)) deliveryHints.push(hint);
     if (deliveryHints.length >= 8) break;
   }
   return JSON.stringify({
-    version: 1,
+    version: 2,
     origin: location.origin,
     searchInputCount: searchInputs.length,
     hasLoginInput: Array.from(document.querySelectorAll("input")).some((input) => visible(input)
       && (input.type === "password" || /手机号|验证码|password/i.test(input.placeholder || ""))),
     hasCouponText: /红包|会员券|优惠券/.test(text),
     checkoutLikely: /提交订单|确认订单|去支付/.test(text),
+    addressRequired: /请选择(?:收货|配送)?地址|请先(?:选择|添加)(?:收货|配送)?地址|请添加(?:收货|配送)?地址/.test(text),
     hasOpenAppHint: /打开\s*(?:美团|饿了么|淘宝)?\s*App|唤起\s*App/i.test(text),
     prices,
     deliveryHints

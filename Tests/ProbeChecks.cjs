@@ -54,6 +54,7 @@ check('reads labeled checkout candidates using integer cents', () => {
     { label: '应付金额', cents: 2890 }, { label: '实付', cents: 0 }, { label: '合计', cents: 1250 }
   ]);
   assert.equal(result.checkoutLikely, true);
+  assert.equal(result.addressRequired, false);
 });
 check('does not treat listing prices or item counts as payable totals', () => {
   assert.deepEqual(run({ text: '鸡腿堡 ¥19.90\n配送费 ¥3\n合计 2 件\n总计12份\n合计 30分钟' }).prices, []);
@@ -69,6 +70,34 @@ check('keeps delivery text as evidence rather than inventing an ETA', () => {
   const result = run({ text: '预计 30～40 分钟送达\n12:35送达\n预计 30～40 分钟送达\n已售100单' });
   assert.deepEqual(result.deliveryHints, ['预计 30～40 分钟送达', '12:35送达']);
 });
+check('preserves the full Eleme clock interval instead of just its last endpoint', () => {
+  const result = run({ text: '确认订单\n请选择收货地址\n立即送出\n预计16:22-16:37送达\n1对1急送 可再提前13分钟 ¥3.1\n合计¥30.4\n已优惠¥42.6\n立即支付' });
+  assert.deepEqual(result.prices, [{ label: '合计', cents: 3040 }]);
+  assert.deepEqual(result.deliveryHints, ['预计16:22-16:37送达']);
+  assert.equal(result.addressRequired, true);
+  assert.equal(result.checkoutLikely, true);
+});
+check('reads the Meituan checkout total without selecting a fee or discount', () => {
+  const result = run({ text: '提交订单\n立即送出\n大约16:35送达\n商品 ¥49\n打包费 ¥2\n配送费 ¥0\n美团红包 -¥7\n小计 ¥43\n已优惠12.3\n合计¥43\n提交订单' });
+  assert.deepEqual(result.prices, [{ label: '合计', cents: 4300 }]);
+  assert.deepEqual(result.deliveryHints, ['大约16:35送达']);
+  assert.equal(result.addressRequired, false);
+});
+check('recognizes clock intervals with alternate separators and midnight boundaries', () => {
+  const result = run({ text: '预计 23:50～00:20 送达\n预计9:05至9:35送达\n预计30-40分钟送达' });
+  assert.deepEqual(result.deliveryHints, ['预计 23:50～00:20 送达', '预计9:05至9:35送达', '预计30-40分钟送达']);
+});
+check('does not invent valid times by truncating invalid clock hours or minutes', () => {
+  assert.deepEqual(run({ text: '预计25:35送达\n预计16:75送达' }).deliveryHints, []);
+});
+check('detects explicit missing-address prompts without exporting address text', () => {
+  for (const text of ['请选择收货地址', '请先添加配送地址', '请先选择地址']) {
+    assert.equal(run({ text }).addressRequired, true);
+  }
+  const result = run({ text: '收货地址：私人地址\n地址管理\n确认订单' });
+  assert.equal(result.addressRequired, false);
+  assert.doesNotMatch(JSON.stringify(result), /私人地址/);
+});
 check('report does not export credentials, raw page, or URL query', () => {
   const input = new Input({ type: 'password', currentValue: 'password-secret' });
   const result = run({ inputs: [input], text: '收货地址：私人地址\n手机号13800000000\n验证码668899\n会员券\n打开美团App' });
@@ -77,7 +106,7 @@ check('report does not export credentials, raw page, or URL query', () => {
   assert.equal(result.hasOpenAppHint, true);
   assert.equal(result.origin, 'https://fixture.example');
   assert.deepEqual(Object.keys(result).sort(), ['version', 'origin', 'searchInputCount', 'hasLoginInput',
-    'hasCouponText', 'checkoutLikely', 'hasOpenAppHint', 'prices', 'deliveryHints'].sort());
+    'hasCouponText', 'checkoutLikely', 'addressRequired', 'hasOpenAppHint', 'prices', 'deliveryHints'].sort());
   assert.doesNotMatch(JSON.stringify(result), /secret|13800000000|668899|私人地址/);
 });
 check('fills a unique product search and clicks only its exact search action', () => {

@@ -170,6 +170,14 @@ private struct ProbeDetails: View {
                     LabeledContent("出现结算页线索", value: probe.checkoutLikely ? "是，待核对" : "未检测到")
                     LabeledContent("出现打开 App 提示", value: probe.hasOpenAppHint ? "是" : "未检测到")
                 }
+                if probe.addressRequired == true {
+                    Section {
+                        Label("平台仍要求选择收货地址。请先选好与另一平台相同的地址，再重新检测。", systemImage: "exclamationmark.triangle")
+                            .foregroundStyle(.orange)
+                        Text("当前金额和送达时间仅作页面参考，尚不能用于同地址比价。")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 Section("候选金额") {
                     if probe.prices.isEmpty { Text("当前没有检测到明确标注的金额") }
                     ForEach(Array(probe.prices.enumerated()), id: \.offset) { _, price in
@@ -182,6 +190,18 @@ private struct ProbeDetails: View {
                 }
             } else if !session.isInspecting {
                 Text("先等待网页载入，再点击检测。")
+            }
+            Section("登录保持检查") {
+                if let summary = session.startupCookies {
+                    LabeledContent("启动时网站记录", value: "\(summary.total) 条")
+                    LabeledContent("启动时会话型记录", value: "\(summary.sessionOnly) 条")
+                }
+                if let summary = session.currentCookies {
+                    LabeledContent("当前网站记录", value: "\(summary.total) 条")
+                    LabeledContent("当前会话型记录", value: "\(summary.sessionOnly) 条")
+                }
+                Text("只统计 Cookie 数量，用于排查重开后退出登录的原因。报告不包含 Cookie 名称或内容；数量本身也不能证明已登录。")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section {
                 Button("重新检测") { session.inspect() }.disabled(session.isInspecting || session.isLoading)
@@ -210,6 +230,7 @@ private struct ReportView: View {
     @ObservedObject var model: AppModel
     @State private var reportURL: URL?
     @State private var exportError: String?
+    @State private var isExporting = false
     var body: some View {
         Form {
             Section {
@@ -219,15 +240,20 @@ private struct ReportView: View {
             ValidationSection(session: model.meituan)
             ValidationSection(session: model.eleme)
             Section("分享验证结果") {
-                Button("生成本地验证报告") {
-                    do { reportURL = try model.reportURL(); exportError = nil }
-                    catch { exportError = error.localizedDescription }
-                }
+                Button(isExporting ? "正在重新检测并生成报告…" : "重新检测并生成报告") {
+                    isExporting = true
+                    reportURL = nil
+                    Task {
+                        defer { isExporting = false }
+                        do { reportURL = try await model.reportURL(); exportError = nil }
+                        catch { exportError = error.localizedDescription }
+                    }
+                }.disabled(isExporting)
                 if let url = reportURL {
                     ShareLink("分享 JSON 报告", item: url)
                 }
                 if let exportError { Text(exportError).foregroundStyle(.red) }
-                Text("报告只包含能力标记、候选金额、送达线索和勾选结果，不导出 Cookie、密码、验证码、地址或完整网页。分享时可选择“存储到文件”查看。")
+                Text("报告包含能力标记、候选金额、完整送达区间、勾选结果和 Cookie 数量，不导出 Cookie 内容、密码、验证码、地址或完整网页。分享时可选择“存储到文件”查看。")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }.navigationTitle("验证记录")

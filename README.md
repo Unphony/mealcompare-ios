@@ -4,6 +4,10 @@
 
 2026-10-23：[首次构建成功](https://github.com/Unphony/mealcompare-ios/actions/runs/39907207638)，对应代码提交 `8330a862`。22 项 Swift 断言和 13 项页面检查通过。下载该运行的 `MealCompare-unsigned` 产物后，按下文在 Windows 自签安装。
 
+后续已在用户手机运行：两平台结算页能够读取合计和送达线索，人工核对个人优惠的链路已走通。本次样例不是同店同餐，饿了么仍需确认收货地址，重开后登录保持尚未解决。见 [真机验证记录](docs/validation-2026-10-23.md)。
+
+0.1.1 增加完整送达区间、缺少地址提示、导出前刷新，以及只统计数量的登录保持诊断。原始截图、地址、电话、Cookie 内容不进入公开源码或报告。
+
 目标设备 iPhone 16 Pro，用户报告 iOS 27.0.1。日常完全由手机执行，所有新增费用为 0。工程最低 iOS 17，无第三方运行库或业务服务器。
 
 ## 已有和未完成
@@ -25,6 +29,10 @@
 
 ## Windows 自签与安装
 
+当前真机成功路线为免费的 [iLoader 2.4.0](https://github.com/nab138/iloader/releases/tag/v2.4.0)：USB 连接设备并登录后选择 **Import IPA**，导入本项目未签名 IPA。更新保持同一账号和应用标识，覆盖安装，不先卸载。
+
+下面保留最初的 Sideloadly 路线。该工具已在本次测试中遇到 `-80046`，不能将它描述为本设备已验证成功的安装方式。
+
 1. 从 [Sideloadly 官网](https://sideloadly.io/)下载 Windows 版本，按官网安装 Apple 设备组件。
 2. USB 连接并解锁 iPhone，完成“信任此电脑”。
 3. 在 Sideloadly 选择设备、导入 IPA，使用自己的普通免费 Apple 账号签名。
@@ -39,7 +47,7 @@
 
 安装后按 [真机验证步骤](docs/device-validation.md)核对两平台的登录、结算、优惠一致性与独立运行。无需下单付款。
 
-页面逻辑检查：运行 node Tests/ProbeChecks.cjs。目前 **13 项模拟页面检查通过**，不代表线上平台可用。
+页面逻辑检查：运行 node Tests/ProbeChecks.cjs。目前 **18 项模拟页面检查通过**，包括本次金额、完整送达区间和缺少地址回归样例；完整自动比价仍需单独验收。
 
 Swift 比较核心的 22 项断言已在 Mac 云构建中运行通过。本机 Windows 没有 Xcode；Mac 上也可执行：
 
