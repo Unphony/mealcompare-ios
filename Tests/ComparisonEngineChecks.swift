@@ -85,9 +85,9 @@ struct ComparisonEngineChecks {
                  "Same food keeps cheapest regardless of ETA; invalid quotes cannot dominate")
         checkIDs(ComparisonEngine.paretoOptimalQuotes(from: [
             quote("base", price: 2_000),
-            quote("more-same-price", price: 2_000, items: [burger(2)]),
-            quote("different-food", price: 2_000, items: [burger(1), BasketItem(canonicalID: "tea", quantity: 1)]),
-            quote("more-dearer", price: 2_500, items: [burger(2)])
+            quote("more-same-price", items: [burger(2)], price: 2_000),
+            quote("different-food", items: [burger(1), BasketItem(canonicalID: "tea", quantity: 1)], price: 2_000),
+            quote("more-dearer", items: [burger(2)], price: 2_500)
         ], for: request), ["more-same-price", "different-food"], "Equal-price superset wins; different contents coexist")
 
         checkIDs(eligible([

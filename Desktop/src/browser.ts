@@ -28,11 +28,11 @@ export class BrowserSessions implements BrowserPort {
         userAgent:'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36'
       });
       context.setDefaultTimeout(10000);
-      // The phone controls only this page. Popups are kept in the same session, never a system browser.
+      // Login popups become the phone's active page, inside the same dedicated session.
       context.on('page',candidate=>{
-        if (!this.pages.has(p)) this.pages.set(p,candidate);
-        else candidate.close().catch(()=>{});
+        this.pages.set(p,candidate);this.frames.delete(p);
       });
+      context.on('close',()=>{this.contexts.delete(p);this.pages.delete(p);this.frames.delete(p);});
       this.contexts.set(p,context);
     }
     page=context.pages().find(x=>!x.isClosed()) ?? await context.newPage();
