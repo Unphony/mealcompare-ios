@@ -33,7 +33,7 @@ else {
         // A dedicated HTTPS port avoids replacing the user's existing Serve route on 443.
         if(enable) {
           const previous=JSON.parse((await run(tailscale,['serve','status','--json'],{windowsHide:true,timeout:15000})).stdout);
-          const existing=previous.Web?.[`${status.Self.DNSName.replace(/\.$/,'')}:8443`];
+          const existing=previous?.Web?.[`${status.Self.DNSName.replace(/\.$/,'')}:8443`];
           if (existing && existing.Handlers?.['/']?.Proxy!==`http://127.0.0.1:${server.port}`) {
             networkMessage='8443 端口已有其他私人服务，请先在 Tailscale 中核对配置';return;
           }
@@ -41,7 +41,7 @@ else {
         }
         const config=JSON.parse((await run(tailscale,['serve','status','--json'],{windowsHide:true,timeout:15000})).stdout);
         const dns=status.Self.DNSName.replace(/\.$/,'');
-        const proxy=config.Web?.[`${dns}:8443`]?.Handlers?.['/']?.Proxy;
+        const proxy=config?.Web?.[`${dns}:8443`]?.Handlers?.['/']?.Proxy;
         networkURL=proxy===`http://127.0.0.1:${server.port}`?`https://${dns}:8443`:'';
         networkMessage=networkURL?'私人 HTTPS 已配置，请用手机 Wi-Fi 与流量分别测试':'Tailscale 已登录，点击“启用手机连接”';
       } catch {networkURL='';networkMessage='私人连接未就绪，请在 Tailscale 检查 HTTPS 授权或网络连接';}
