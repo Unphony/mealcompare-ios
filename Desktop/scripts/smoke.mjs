@@ -6,7 +6,9 @@ await mkdir('.runtime',{recursive:true});
 const data=await mkdtemp(resolve('.runtime/smoke-'));
 const environment={...process.env,MEALCOMPARE_DATA_DIR:data};
 delete environment.ELECTRON_RUN_AS_NODE;
-const app=await electron.launch({args:['.','--background'],env:environment,timeout:30000});
+const packaged=process.argv.includes('--packaged');
+const app=await electron.launch({args:packaged?['--background']:['.','--background'],
+  ...(packaged?{executablePath:resolve('release/饭价电脑端/electron.exe')}:{}),env:environment,timeout:30000});
 try {
   const page=await app.firstWindow();
   await page.waitForFunction(()=>document.getElementById('code')?.textContent?.length===8);

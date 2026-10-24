@@ -4,6 +4,8 @@ import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { once } from 'node:events';
+import { WebSocket } from 'ws';
 import { frontier, parseJob, type Quote, type Platform } from '../domain.js';
 import { Store, Pairing } from '../store.js';
 import { MealService } from '../service.js';
@@ -86,4 +88,17 @@ test('HTTP 拒绝未认证、跨站来源、未知命令；配对后取状态及
     assert.equal((await fetch(url+'/v1/jobs',{method:'POST',headers,body:JSON.stringify(input)})).status,202);
     store.revokeDevices();assert.equal((await fetch(url+'/v1/status',{headers})).status,401);
   } finally {await server.close();await service.close();}
+});
+test('WebSocket 配对后推送变化，撤销设备即断开；消息不含配对密钥',async()=>{
+  const store=new Store(':memory:'),service=new MealService(store,new FakeBrowser()),server=await startServer(service,0);
+  const device=store.addDevice();
+  const ws=new WebSocket(`ws://127.0.0.1:${server.port}/v1/events`,{headers:{Authorization:'Bearer '+device.token}});
+  try {
+    const first=once(ws,'message');await once(ws,'open');
+    assert.deepEqual(JSON.parse(String((await first)[0])),{type:'changed'});
+    const changed=once(ws,'message');service.emit('change');
+    assert.equal(String((await changed)[0]).includes(device.token),false);
+    const closed=once(ws,'close');store.revokeDevices();service.emit('change');
+    assert.equal((await closed)[0],1008);
+  } finally {ws.terminate();await server.close();await service.close();}
 });

@@ -56,6 +56,7 @@ else {
       else if(action==='release') await service!.releaseAll();
       else if(action==='login' && typeof value==='boolean') app.setLoginItemSettings({openAtLogin:value,args:['--background']});
       else if(action==='tailscale') await shell.openExternal('https://tailscale.com/download/windows');
+      else if(action==='https') await shell.openExternal('https://login.tailscale.com/admin/dns');
       else if(action!=='status') throw Error('未知操作');
       return snapshot();
     });

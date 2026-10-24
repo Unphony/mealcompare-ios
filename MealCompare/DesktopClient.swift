@@ -207,7 +207,9 @@ struct DesktopFrame: Decodable {
         guard paired, eventTask == nil else { return }
         eventTask = Task { [weak self] in
             guard let self else { return }
+            let generation = self.sessionGeneration
             while !Task.isCancelled {
+                var activeSocket: URLSessionWebSocketTask?
                 do {
                     let url = try self.base(self.credential?.endpoint ?? "").appendingPathComponent("v1/events")
                     var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)!
@@ -215,10 +217,11 @@ struct DesktopFrame: Decodable {
                     var request = URLRequest(url: parts.url!)
                     request.setValue("Bearer " + (self.credential?.token ?? ""), forHTTPHeaderField: "Authorization")
                     let ws = self.session.webSocketTask(with: request); self.socket = ws; ws.resume()
+                    activeSocket = ws
                     while !Task.isCancelled { _ = try await ws.receive(); await self.refresh() }
                 } catch {
-                    self.socket?.cancel(with: .goingAway, reason: nil)
-                    if !Task.isCancelled { await self.refresh(); try? await Task.sleep(for: .seconds(5)) }
+                    activeSocket?.cancel(with: .goingAway, reason: nil)
+                    if !Task.isCancelled && generation == self.sessionGeneration { await self.refresh(); try? await Task.sleep(for: .seconds(5)) }
                 }
             }
         }
@@ -231,6 +234,7 @@ struct DesktopFrame: Decodable {
         disconnectEvents(); DesktopKeychain.clear(); credential = nil; paired = false; connected = false
         snapshot = nil; frame = nil; controlling = false; clearCache(); message = "已忘记电脑；如需撤销旧手机权限，请在电脑解除配对"
     }
+    func hideRemote() { frame = nil; message = "画面已关闭，电脑保持暂停。重新接管后可结束接管并继续检测。" }
     private func clearCache() { for key in ["desktopCache", "desktopCacheEndpoint", "desktopLastSync"] { UserDefaults.standard.removeObject(forKey: key) } }
 }
 
@@ -370,7 +374,10 @@ struct DesktopRemoteView: View {
             .navigationTitle(platform == "meituan" ? "接管美团" : "接管淘宝闪购")
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled()
-            .toolbar { Button("结束接管") { Task { await connection.takeControl(platform, active: false); if !connection.controlling { dismiss() } } }.disabled(connection.busy) }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("关闭画面") { connection.hideRemote(); dismiss() }.disabled(connection.busy) }
+                ToolbarItem(placement: .confirmationAction) { Button("结束接管") { Task { await connection.takeControl(platform, active: false); if !connection.controlling { dismiss() } } }.disabled(connection.busy) }
+            }
             .task { await connection.takeControl(platform, active: true) }
         }
     }

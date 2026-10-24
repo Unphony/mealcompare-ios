@@ -9,7 +9,7 @@ function render(s){
   for(const j of s.jobs.slice(0,6)){const row=document.createElement('div');row.className='job';row.textContent=`${j.input.platform==='meituan'?'美团':'淘宝闪购'} · ${j.message}`;$('jobs').append(row);}
   if(!s.jobs.length)$('jobs').textContent='手机配对后可发起查询';
 }
-for(const [id,action] of [['install','tailscale'],['networkButton','network'],['refresh','refresh'],['renew','renew'],['release','release'],['revoke','revoke']]){
+for(const [id,action] of [['install','tailscale'],['https','https'],['networkButton','network'],['refresh','refresh'],['renew','renew'],['release','release'],['revoke','revoke']]){
   $(id).onclick=async()=>{if(action==='revoke'&&!confirm('解除所有手机配对？手机需要重新输入配对码。'))return;$(id).disabled=true;await call(action);$(id).disabled=false;};
 }
 $('startup').onchange=()=>call('login',$('startup').checked);
