@@ -1,0 +1,24 @@
+{
+  "name": "mealcompare-desktop",
+  "version": "0.3.0",
+  "private": true,
+  "description": "饭价 Windows 后端与手机接管",
+  "main": "out/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/assets.mjs",
+    "start": "npm run build && electron .",
+    "test": "npm run build && node --test out/tests/*.test.js",
+    "package": "npm run build && node scripts/package.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.64.1",
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.5.0",
+    "electron": "45.0.0",
+    "typescript": "7.0.2"
+  }
+}

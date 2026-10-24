@@ -11,3 +11,8 @@ xcuserdata/
 *.mobileprovision
 *.p8
 .env
+node_modules/
+Desktop/out/
+Desktop/release/
+Desktop/.runtime/
+*.sqlite*

@@ -54,9 +54,8 @@ enum ComparisonEngine {
         return quotes.filter { eligible($0, for: request) }
     }
 
-    /// A quote is dominated when another eligible quote is no dearer and no slower,
-    /// and improves at least one of those measures. Exact ties are retained.
-    /// Output order follows input order, including ties between platforms.
+    /// A no-dearer basket dominates only if it contains every exact food/specification
+    /// and is cheaper or contains more. ETA is displayed but never ranks food quantity.
     static func paretoOptimalQuotes(
         from quotes: [MealQuote],
         for request: ComparisonRequest
@@ -64,12 +63,28 @@ enum ComparisonEngine {
         let candidates = eligibleQuotes(from: quotes, for: request)
         return candidates.filter { candidate in
             !candidates.contains { other in
-                other.totalCents <= candidate.totalCents
-                    && other.etaMinutes <= candidate.etaMinutes
-                    && (other.totalCents < candidate.totalCents
-                        || other.etaMinutes < candidate.etaMinutes)
+                dominates(items: other.items, price: other.totalCents,
+                          over: candidate.items, price: candidate.totalCents)
             }
         }
+    }
+
+    static func dominates(items richer: [BasketItem], price richerPrice: Int,
+                          over smaller: [BasketItem], price smallerPrice: Int) -> Bool {
+        guard richerPrice <= smallerPrice else { return false }
+        func amounts(_ items: [BasketItem]) -> [String: Int]? {
+            var result: [String: Int] = [:]
+            for item in items {
+                guard hasText(item.canonicalID), item.quantity > 0 else { return nil }
+                let sum = (result[item.canonicalID] ?? 0).addingReportingOverflow(item.quantity)
+                guard !sum.overflow else { return nil }
+                result[item.canonicalID] = sum.partialValue
+            }
+            return result.isEmpty ? nil : result
+        }
+        guard let a = amounts(richer), let b = amounts(smaller),
+              b.allSatisfy({ (a[$0.key] ?? 0) >= $0.value }) else { return false }
+        return richerPrice < smallerPrice || a.contains { $0.value > (b[$0.key] ?? 0) }
     }
 
     private static func valid(_ request: ComparisonRequest) -> Bool {

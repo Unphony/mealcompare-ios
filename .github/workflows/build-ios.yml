@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/native-feasibility
+      - codex/desktop-backend
   workflow_dispatch:
     inputs:
       private_macos_budget_confirmed:

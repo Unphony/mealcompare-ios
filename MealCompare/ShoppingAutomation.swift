@@ -7,6 +7,7 @@ struct ShoppingQuote: Identifiable, Codable, Equatable {
     let platform: DeliveryPlatform
     let productName: String
     let basketDescription: String
+    let items: [BasketItem]
     let totalCents: Int
     let etaText: String
     let latestArrival: Date
@@ -679,7 +680,9 @@ private extension ShoppingAutomation {
             }
             let description = basket.map { "\($0.name)\($0.specs.isEmpty ? "" : "（\($0.specs)）") ×\($0.quantity)" }.joined(separator: "；")
             let quote = ShoppingQuote(id: UUID().uuidString, platform: platform, productName: product,
-                basketDescription: description, totalCents: amount, etaText: probe.deliveryHints[0],
+                basketDescription: description,
+                items: basket.map { BasketItem(canonicalID: lineKey($0), quantity: $0.quantity) },
+                totalCents: amount, etaText: probe.deliveryHints[0],
                 latestArrival: latest, observedAt: observed,
                 coverageNote: "未检测到缺地址提示；未核实跨平台同地址。" + coverage)
             if !quotes.contains(where: { $0.basketDescription == description && $0.totalCents == amount
@@ -687,9 +690,9 @@ private extension ShoppingAutomation {
             let eligible = quotes.filter { $0.totalCents <= budget }
             frontier = eligible.filter { candidate in
                 !eligible.contains { other in
-                    other.id != candidate.id && other.totalCents <= candidate.totalCents
-                        && other.latestArrival <= candidate.latestArrival
-                        && (other.totalCents < candidate.totalCents || other.latestArrival < candidate.latestArrival)
+                    other.id != candidate.id && ComparisonEngine.dominates(
+                        items: other.items, price: other.totalCents,
+                        over: candidate.items, price: candidate.totalCents)
                 }
             }.sorted { $0.totalCents == $1.totalCents ? $0.latestArrival < $1.latestArrival : $0.totalCents < $1.totalCents }
             note("已核实应付 ¥\(String(format: "%.2f", Double(amount) / 100))，\(quote.etaText)。")

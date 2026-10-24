@@ -81,8 +81,14 @@ struct ComparisonEngineChecks {
             quote("unverified-winner", price: 1, eta: 1, verified: false),
             quote("over-budget-fast", price: 3_001, eta: 1)
         ], for: request)
-        checkIDs(frontier, ["cheap-slow", "balanced", "fast", "balanced-other-platform"],
-                 "Pareto preserves tradeoffs and exact cross-platform ties; invalid quotes cannot dominate")
+        checkIDs(frontier, ["cheap-slow"],
+                 "Same food keeps cheapest regardless of ETA; invalid quotes cannot dominate")
+        checkIDs(ComparisonEngine.paretoOptimalQuotes(from: [
+            quote("base", price: 2_000),
+            quote("more-same-price", price: 2_000, items: [burger(2)]),
+            quote("different-food", price: 2_000, items: [burger(1), BasketItem(canonicalID: "tea", quantity: 1)]),
+            quote("more-dearer", price: 2_500, items: [burger(2)])
+        ], for: request), ["more-same-price", "different-food"], "Equal-price superset wins; different contents coexist")
 
         checkIDs(eligible([
             quote(""), quote("blank-platform", platform: " \n"),

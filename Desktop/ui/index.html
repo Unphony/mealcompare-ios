@@ -1,0 +1,12 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>饭价电脑端</title><link rel="stylesheet" href="style.css"></head>
+<body><header><span class="brand">饭价</span><span class="tag">电脑端 · 0.3.0 通信验证版</span><h1>电脑查，手机选。</h1><p>关闭窗口后留在托盘运行。请保持电脑开机联网；正在运行时会阻止自动休眠。</p></header>
+<main><section><h2>连接你的 iPhone</h2><p id="network">读取连接状态…</p><div class="actions"><button id="install">安装 Tailscale</button><button id="networkButton" class="primary">启用手机连接</button><button id="refresh">刷新状态</button></div>
+<p>电脑与手机使用同一 Tailscale Personal 免费账号；手机查询时开启 Tailscale VPN。</p>
+<label>在“饭价”App 中填写电脑地址<input id="url" readonly placeholder="登录并启用后显示私人 HTTPS 地址"></label>
+<div class="pair"><div><small>一次性配对码 · 10 分钟有效</small><strong id="code">—</strong></div><button id="renew">换一组配对码</button></div><p id="expires"></p>
+<p class="hint">本阶段支持远程搜索、结算候选金额检测、历史摘要读取与人工接管。自动配餐调度尚未迁移，候选金额不作为已核实的正式比价结果。</p></section>
+<section><h2>查询与接管</h2><div id="jobs">暂无查询</div><div class="actions"><button id="release">结束全部手机接管</button><button id="revoke">解除所有手机配对</button></div></section>
+<section><h2>本地记录</h2><p id="counts"></p><p id="dataDir" class="path"></p><label><input id="startup" type="checkbox"> Windows 登录后启动电脑端</label><p>外卖登录状态保存在专用浏览器中；配对密钥与截图不会写入查询记录。手动输入的验证码只传给当前网页。</p></section>
+<p id="error" role="alert"></p></main><script src="app.js"></script></body></html>
